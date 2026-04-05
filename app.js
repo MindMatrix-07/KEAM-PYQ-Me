@@ -74,11 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
         isLoadingFile = true;
         try {
             const response = await fetch('KEAM_PYQ_All.pdf');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const blob = await response.blob();
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onloadend = () => {
-                    // Extract base64 without the data URI scheme prefix
                     const base64Data = reader.result.split(',')[1];
                     base64Pdf = base64Data;
                     isLoadingFile = false;
@@ -90,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Failed to load PDF:", error);
             isLoadingFile = false;
-            return null;
+            throw new Error(error.message || "Unknown fetching error");
         }
     }
 
@@ -158,10 +160,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // First time init stream
             if (!chatSession) {
                 const model = genAI.getGenerativeModel({ model: selectedModelAlias });
-                const pdfBase64 = await getPdfFileAsBase64();
                 
-                if (!pdfBase64) {
-                    throw new Error("Could not load the PDF file internally.");
+                let pdfBase64;
+                try {
+                    pdfBase64 = await getPdfFileAsBase64();
+                } catch (fetchErr) {
+                     if (window.location.protocol === 'file:') {
+                         throw new Error("You cannot use the AI while opening the index.html file locally (file:// URL) because browsers block fetching local PDFs. Please push your code and view this on your GitHub pages website, or run a local server.");
+                     }
+                     throw new Error("Could not load the PDF file internally: " + fetchErr.message);
                 }
 
                 // Initial System Instruction and file load sent as history
