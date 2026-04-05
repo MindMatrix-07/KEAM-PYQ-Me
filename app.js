@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const inputApiKey = document.getElementById('api-key-input');
     const modelSelect = document.getElementById('model-select');
+    const pdfFileInput = document.getElementById('pdf-file-input');
     const saveKeyBtn = document.getElementById('save-key-btn');
     const setupError = document.getElementById('setup-error');
     
@@ -21,8 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let genAI = null;
     let chatSession = null;
     let base64Pdf = null;
-    let isLoadingFile = false;
-    let selectedModelAlias = "gemini-1.5-flash"; // Default
+    let selectedModelAlias = "gemini-1.5-flash";
 
     // Toggle Chat Panel
     toggleBtn.addEventListener('click', () => {
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    saveKeyBtn.addEventListener('click', () => {
+    saveKeyBtn.addEventListener('click', async () => {
         const key = inputApiKey.value.trim();
         if (!key) {
             setupError.innerText = "Please enter an API key.";
@@ -55,10 +55,32 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
+        if (!pdfFileInput.files || pdfFileInput.files.length === 0) {
+            setupError.innerText = "Please select the KEAM_PYQ_All.pdf file from your computer.";
+            setupError.style.display = 'block';
+            return;
+        }
+
+        saveKeyBtn.disabled = true;
+        saveKeyBtn.innerText = 'Reading PDF...';
+        setupError.style.display = 'none';
+
+        try {
+            base64Pdf = await readLocalFile(pdfFileInput.files[0]);
+        } catch (e) {
+            setupError.innerText = "Failed to read the PDF file. Please try again.";
+            setupError.style.display = 'block';
+            saveKeyBtn.disabled = false;
+            saveKeyBtn.innerText = 'Start AI Analysis';
+            return;
+        }
+        
         selectedModelAlias = modelSelect.value;
         localStorage.setItem('gemini_api_key', key);
         localStorage.setItem('gemini_model_alias', selectedModelAlias);
         setupComplete(key);
+        saveKeyBtn.disabled = false;
+        saveKeyBtn.innerText = 'Start AI Analysis';
     });
 
     function setupComplete(key) {
@@ -68,32 +90,17 @@ document.addEventListener('DOMContentLoaded', () => {
         genAI = new GoogleGenerativeAI(key);
     }
 
-    // Convert local PDF to Base64
-    async function getPdfFileAsBase64() {
-        if (base64Pdf) return base64Pdf;
-        isLoadingFile = true;
-        try {
-            const response = await fetch('/KEAM_PYQ_All.pdf');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const blob = await response.blob();
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    const base64Data = reader.result.split(',')[1];
-                    base64Pdf = base64Data;
-                    isLoadingFile = false;
-                    resolve(base64Data);
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
-        } catch (error) {
-            console.error("Failed to load PDF:", error);
-            isLoadingFile = false;
-            throw new Error(error.message || "Unknown fetching error");
-        }
+    // Read local PDF file selected by the user
+    function readLocalFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64Data = reader.result.split(',')[1];
+                resolve(base64Data);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
     }
 
     function addMessage(text, sender) {
@@ -161,14 +168,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!chatSession) {
                 const model = genAI.getGenerativeModel({ model: selectedModelAlias });
                 
-                let pdfBase64;
-                try {
-                    pdfBase64 = await getPdfFileAsBase64();
-                } catch (fetchErr) {
-                     if (window.location.protocol === 'file:') {
-                         throw new Error("You cannot use the AI while opening the index.html file locally (file:// URL) because browsers block fetching local PDFs. Please push your code and view this on your GitHub pages website, or run a local server.");
-                     }
-                     throw new Error("Could not load the PDF file internally: " + fetchErr.message);
+                if (!base64Pdf) {
+                    throw new Error("PDF not loaded. Please close this panel, click 'Use AI Assistant' again, and select the PDF file.");
                 }
 
                 // Initial System Instruction and file load sent as history
@@ -179,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             parts: [
                                 {
                                     inlineData: {
-                                        data: pdfBase64,
+                                        data: base64Pdf,
                                         mimeType: "application/pdf"
                                     }
                                 },
