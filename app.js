@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const messagingView = document.getElementById('messaging-view');
     
     const inputApiKey = document.getElementById('api-key-input');
+    const modelSelect = document.getElementById('model-select');
     const saveKeyBtn = document.getElementById('save-key-btn');
     const setupError = document.getElementById('setup-error');
     
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let chatSession = null;
     let base64Pdf = null;
     let isLoadingFile = false;
+    let selectedModelAlias = "gemini-1.5-flash"; // Default
 
     // Toggle Chat Panel
     toggleBtn.addEventListener('click', () => {
@@ -34,8 +36,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function checkExistingKey() {
         const storedKey = localStorage.getItem('gemini_api_key');
+        const storedModel = localStorage.getItem('gemini_model_alias');
         if (storedKey) {
-            setupComplete(storedKey);
+            inputApiKey.value = storedKey;
+            if (storedModel) {
+                modelSelect.value = storedModel;
+                selectedModelAlias = storedModel;
+            }
+            // setupComplete(storedKey); // Don't auto-start now, let user press start to confirm model
         }
     }
 
@@ -46,7 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
             setupError.style.display = 'block';
             return;
         }
+        
+        selectedModelAlias = modelSelect.value;
         localStorage.setItem('gemini_api_key', key);
+        localStorage.setItem('gemini_model_alias', selectedModelAlias);
         setupComplete(key);
     });
 
@@ -146,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // First time init stream
             if (!chatSession) {
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+                const model = genAI.getGenerativeModel({ model: selectedModelAlias });
                 const pdfBase64 = await getPdfFileAsBase64();
                 
                 if (!pdfBase64) {
