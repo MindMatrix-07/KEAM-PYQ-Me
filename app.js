@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // First time init stream
             if (!chatSession) {
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
                 const pdfBase64 = await getPdfFileAsBase64();
                 
                 if (!pdfBase64) {
