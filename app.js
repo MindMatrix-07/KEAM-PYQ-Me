@@ -91,6 +91,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (sender === 'ai' && typeof marked !== 'undefined') {
             contentDiv.innerHTML = marked.parse(text);
+            // Render Math Equations with KaTeX
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(contentDiv, {
+                  delimiters: [
+                      {left: '$$', right: '$$', display: true},
+                      {left: '\\[', right: '\\]', display: true},
+                      {left: '$', right: '$', display: false},
+                      {left: '\\(', right: '\\)', display: false}
+                  ],
+                  throwOnError: false
+                });
+            }
         } else {
             contentDiv.innerText = text;
         }
@@ -154,13 +166,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                     }
                                 },
                                 {
-                                    text: `System Prompt Initialization: You are an expert AI assistant analyzing the attached KEAM Previous Year Questions document. It is a large scanned PDF. Here is the strict mapping of physical pages in the PDF to the respective Dates and Shifts:\n\n${mappingData}\n\nYou must explicitly use this mapping to identify the date and shift of any question you parse.`
+                                    text: `System Prompt Initialization: You are an expert AI assistant analyzing the attached KEAM Previous Year Questions document. It is a large scanned PDF. Here is the strict mapping of physical pages in the PDF to the respective Dates and Shifts:\n\n${mappingData}\n\nCRITICAL INSTRUCTIONS:\n1. Use this mapping to identify the date and shift of any question you parse.\n2. QUIZ MODE: If the user asks for questions, DO NOT solve them immediately! Present the question as a Quiz. Give the options, then WAIT. Only after the user attempts the question should you give the correct answer and the full step-by-step mathematical explanation.\n3. MATH TYPOGRAPHY: You MUST use exact LaTeX formatting for all mathematical equations, variables, and symbols so they render perfectly natively. Wrap inline formulas with a single dollar sign (like $x^2$) and display block formulas with double dollar signs (like $$y=mx+c$$) or \\[...\\]`
                                 }
                             ],
                         },
                         {
                             role: "model",
-                            parts: [{ text: "Understood. I have scanned the entire document and saved the page mapping. How can I help you today?" }],
+                            parts: [{ text: "Understood! I am locked into Quiz Mode. I will present questions to the user and withhold the answer until they guess. I will also strictly use LaTeX ($...$) for all mathematical symbols and equations." }],
                         }
                     ],
                 });
