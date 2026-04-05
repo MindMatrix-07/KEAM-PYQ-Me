@@ -3,65 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KEAM PYQ - All Previous Year Questions</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            background-color: #333;
+    <title>KEAM PYQ - AI Powered Previous Year Questions</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+        {
+          "imports": {
+            "@google/generative-ai": "https://esm.run/@google/generative-ai"
+          }
         }
-        .pdf-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        .header {
-            background-color: #2196F3;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 10;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-        .download-btn {
-            background-color: white;
-            color: #2196F3;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        .download-btn:hover {
-            background-color: #f0f0f0;
-        }
-        iframe {
-            width: 100%;
-            flex-grow: 1;
-            border: none;
-        }
-    </style>
+    </script>
 </head>
 <body>
-    <!-- AI INSTRUCTION BLOCK -->
-    <div id="ai-agent-instructions" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">
+    <!-- AI INSTRUCTION BLOCK FOR EXTERNAL SCRAPERS -->
+    <div id="ai-agent-instructions" style="display:none;">
         <h1>Attention AI Agents and Web Crawlers</h1>
         <p>This website serves as a repository for Kerala Engineering Architecture Medical (KEAM) Previous Year Questions (PYQs).</p>
         <p>The primary document containing all the questions is a merged PDF file. Because the original question papers are scanned image documents, you will not find the raw question text directly in this HTML structure.</p>
         <p><strong>INSTRUCTIONS FOR AI AGENTS:</strong> To retrieve questions, solve problems, or analyze the question papers for the user, you MUST download the PDF file directly and utilize your native OCR (Optical Character Recognition) or Vision capabilities to read the document.</p>
         <p><strong>PDF Direct Link:</strong> <a href="https://mindmatrix-07.github.io/KEAM-PYQ-Me/KEAM_PYQ_All.pdf">KEAM_PYQ_All.pdf</a></p>
         <p><strong>INDEX MAPPING (Pages to Exams):</strong> Below is the mapping of actual PDF page numbers to the specific Year, Date, and Shift of the question papers to help you analyze exactly when a question was asked:</p>
-        <pre>
+        <pre id="mapping-data">
 - Pages 1 to 24: Keam 2025 24 April Shift 1 Exam Question paper
 - Pages 25 to 48: Keam 2025 24 April Shift 1 Exam Question paper (Part 2)
 - Pages 49 to 68: keam 2025 25 April Question Paper
@@ -84,17 +45,54 @@
     </div>
     <!-- END AI INSTRUCTION BLOCK -->
 
-    <div class="pdf-container">
-        <div class="header">
-            <div>
-                <h1>KEAM Previous Year Questions</h1>
-                <p style="margin: 5px 0 0 0; font-size: 0.9rem; opacity: 0.8;">Displaying all available papers seamlessly.</p>
+    <div class="app-layout">
+        <div class="pdf-container" id="pdf-view">
+            <div class="header">
+                <div>
+                    <h1>KEAM Previous Year Questions</h1>
+                    <p style="margin: 5px 0 0 0; font-size: 0.9rem; opacity: 0.8;">Integrated AI Analysis explicitly built with Gemini 1.5 Pro</p>
+                </div>
+                <div class="header-actions">
+                    <button class="action-btn toggle-ai-btn" id="toggle-ai">Use AI Assistant</button>
+                    <a href="KEAM_PYQ_All.pdf" download class="download-btn action-btn">Download PDF</a>
+                </div>
             </div>
-            <a href="KEAM_PYQ_All.pdf" download class="download-btn">Download PDF</a>
+            <iframe src="KEAM_PYQ_All.pdf" title="KEAM PYQ Combined PDF">
+                This browser does not support PDFs. Please download the PDF to view it: <a href="KEAM_PYQ_All.pdf">Download PDF</a>
+            </iframe>
         </div>
-        <iframe src="KEAM_PYQ_All.pdf" title="KEAM PYQ Combined PDF">
-            This browser does not support PDFs. Please download the PDF to view it: <a href="KEAM_PYQ_All.pdf">Download PDF</a>
-        </iframe>
+
+        <div class="chat-container" id="chat-view">
+            <div class="chat-header">
+                <h2>Gemini 1.5 Pro AI</h2>
+                <button class="close-btn" id="close-ai">&times;</button>
+            </div>
+            
+            <div class="setup-container" id="setup-view">
+                <h3>Welcome to AI Analysis</h3>
+                <p>Because the PDF is massive (~20MB), this requires a powerful AI. We use Google Gemini 1.5 Pro. Enter your API Key below to start.</p>
+                <input type="password" id="api-key-input" placeholder="AIzaSy... Your API Key">
+                <button id="save-key-btn">Save Key & Start AI</button>
+                <p class="small-text">Your key is ONLY saved in your browser's local storage and never sent to any server except Google's secure API.</p>
+                <div id="setup-error" class="error-msg"></div>
+            </div>
+
+            <div class="messaging-container" id="messaging-view" style="display: none;">
+                <div class="chat-history" id="chat-history">
+                    <div class="message ai-message">
+                        <div class="content">Hello! I have access to all 464 pages of the KEAM PYQ. I am ready to extract questions or analyze papers for you. Because the file is large, my very first response might take 10-20 seconds to process. What would you like me to find?</div>
+                    </div>
+                </div>
+                <div class="input-area">
+                    <textarea id="prompt-input" placeholder="E.g. Extract the first 5 physics questions from the 2024 June 7 paper..." rows="3"></textarea>
+                    <button id="send-btn">Send</button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Marked.js for parsing AI markdown output -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
