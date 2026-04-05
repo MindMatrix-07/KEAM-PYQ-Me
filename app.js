@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (base64Pdf) return base64Pdf;
         isLoadingFile = true;
         try {
-            const response = await fetch('KEAM_PYQ_All.pdf');
+            const response = await fetch('/KEAM_PYQ_All.pdf');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }

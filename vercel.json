@@ -1,0 +1,22 @@
+{
+  "headers": [
+    {
+      "source": "/(.*\\.pdf)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Expose-Headers",
+          "value": "Content-Length, Content-Type"
+        }
+      ]
+    }
+  ],
+  "cleanUrls": true
+}
