@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let genAI = null;
     let chatSession = null;
     let base64Pdf = null;
-    let selectedModelAlias = "gemini-1.5-flash";
+    let selectedModelAlias = "gemini-2.0-flash";
 
     // Toggle Chat Panel
     toggleBtn.addEventListener('click', () => {
