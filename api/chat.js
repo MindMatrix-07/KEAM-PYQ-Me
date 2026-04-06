@@ -3,8 +3,10 @@ const path = require('path');
 const mappingEntries = require('../index_mapping.json');
 
 const PDF_FILENAME = 'KEAM_PYQ_All.pdf';
+const QUESTION_BANK_PATH = path.join(process.cwd(), 'data', 'question_bank.json');
 const DEFAULT_MODEL = 'gemini-2.5-flash';
 const MAX_HISTORY_MESSAGES = 12;
+const MAX_CONTEXT_MATCHES = 10;
 const ALLOWED_MODELS = new Set([
     'gemini-2.5-pro',
     'gemini-2.5-flash',
@@ -13,7 +15,7 @@ const ALLOWED_MODELS = new Set([
 
 const SYSTEM_PROMPT = `You are an expert AI assistant for KEAM previous year questions.
 
-You are working with a single bundled PDF that contains multiple scanned KEAM papers. The page mapping below is authoritative, and you must use it whenever the user asks for a year, date, shift, or paper.
+You are working with a single bundled PDF that contains multiple scanned KEAM papers and a structured local question bank extracted from that PDF plus linked answer keys. The page mapping below is authoritative, and you must use it whenever the user asks for a year, date, shift, or paper.
 
 ${mappingEntries
     .map((entry) => `- Pages ${entry.start_page} to ${entry.end_page}: ${entry.exam_info}`)
@@ -24,11 +26,13 @@ Critical instructions:
 2. Quiz mode is the default behavior. If the user asks for questions, show the question and options first, then wait for the user's attempt before revealing the answer and explanation.
 3. Use LaTeX for mathematics. Wrap inline math with $...$ and block math with $$...$$.
 4. If the scan is unclear, say so explicitly instead of inventing text.
-5. Prefer concise, step-by-step explanations for physics, chemistry, and mathematics problems.`;
+5. Prefer concise, step-by-step explanations for physics, chemistry, and mathematics problems.
+6. If structured question-bank matches are provided with the prompt, use them to identify the exact paper, topic, and answer source.`;
 
 let cachedPdfBuffer = null;
 let cachedUploadedFile = null;
 let uploadState = null;
+let cachedQuestionBank = null;
 
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -111,6 +115,86 @@ async function getPdfBuffer() {
     }
 
     return cachedPdfBuffer;
+}
+
+async function getQuestionBank() {
+    if (cachedQuestionBank) {
+        return cachedQuestionBank;
+    }
+
+    try {
+        const raw = await fs.readFile(QUESTION_BANK_PATH, 'utf8');
+        cachedQuestionBank = JSON.parse(raw);
+    } catch {
+        cachedQuestionBank = [];
+    }
+
+    return cachedQuestionBank;
+}
+
+function tokenize(text) {
+    return String(text || '')
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter((token) => token.length > 2);
+}
+
+function buildQuestionContext(records) {
+    if (!records.length) {
+        return '';
+    }
+
+    return records
+        .map((record) => {
+            const options = Array.isArray(record.options)
+                ? record.options.map((option) => `${option.key}. ${option.text || '[blank in extract]'}`).join(' | ')
+                : '';
+            const answerPart = record.correct_option ? `Correct option (do not reveal unless asked): ${record.correct_option}` : 'Correct option unavailable';
+
+            return [
+                `- ${record.date_label || record.exam_info} | Q${record.question_number}${record.shift ? ` | ${record.shift}` : ''}`,
+                `  Subject: ${record.subject} | Chapter: ${record.chapter} | Topic: ${record.topic}`,
+                `  Question: ${record.question_text || record.text}`,
+                options ? `  Options: ${options}` : '  Options: not extracted cleanly',
+                `  ${answerPart}`,
+            ].join('\n');
+        })
+        .join('\n');
+}
+
+function findRelevantQuestions(questionBank, message) {
+    const terms = new Set(tokenize(message));
+    if (!terms.size) {
+        return [];
+    }
+
+    const scored = questionBank
+        .map((record) => {
+            const haystack = tokenize(
+                `${record.year || ''} ${record.date_label || ''} ${record.shift || ''} ${record.subject || ''} ${record.chapter || ''} ${record.topic || ''} ${record.question_text || record.text || ''}`
+            );
+            const haystackSet = new Set(haystack);
+            let score = 0;
+            terms.forEach((term) => {
+                if (haystackSet.has(term)) {
+                    score += 3;
+                } else if ((record.question_text || record.text || '').toLowerCase().includes(term)) {
+                    score += 1;
+                }
+            });
+
+            if ((message.match(/\b20\d{2}\b/g) || []).some((year) => String(record.year || '') === year)) {
+                score += 2;
+            }
+
+            return { record, score };
+        })
+        .filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, MAX_CONTEXT_MATCHES)
+        .map((item) => item.record);
+
+    return scored;
 }
 
 async function fetchGemini(url, options) {
@@ -284,10 +368,12 @@ function extractReply(payload) {
 
 module.exports = async (req, res) => {
     if (req.method === 'GET') {
+        const questionBank = await getQuestionBank();
         return json(res, 200, {
             configured: Boolean(process.env.GEMINI_API_KEY),
             defaultModel: DEFAULT_MODEL,
             allowedModels: Array.from(ALLOWED_MODELS),
+            questionCount: questionBank.length,
         });
     }
 
@@ -307,6 +393,9 @@ module.exports = async (req, res) => {
         const model = ALLOWED_MODELS.has(body.model) ? body.model : DEFAULT_MODEL;
         const message = typeof body.message === 'string' ? body.message.trim() : '';
         const history = sanitizeHistory(body.history);
+        const questionBank = await getQuestionBank();
+        const relevantQuestions = findRelevantQuestions(questionBank, message);
+        const structuredContext = buildQuestionContext(relevantQuestions);
 
         if (!apiKey) {
             return json(res, 400, {
@@ -355,6 +444,26 @@ module.exports = async (req, res) => {
                     ],
                 },
                 ...history,
+                ...(structuredContext
+                    ? [
+                          {
+                              role: 'user',
+                              parts: [
+                                  {
+                                      text: `Structured question-bank matches for the current prompt:\n${structuredContext}`,
+                                  },
+                              ],
+                          },
+                          {
+                              role: 'model',
+                              parts: [
+                                  {
+                                      text: 'Understood. I will use these structured matches together with the PDF and will preserve quiz-mode behavior unless the user explicitly asks for the answer.',
+                                  },
+                              ],
+                          },
+                      ]
+                    : []),
                 {
                     role: 'user',
                     parts: [{ text: message }],

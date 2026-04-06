@@ -1,3 +1,5 @@
+import { createQuizController } from './quiz.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const toggleBtn = document.getElementById('toggle-ai');
     const closeBtn = document.getElementById('close-ai');
@@ -12,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveKeyBtn = document.getElementById('save-key-btn');
     const setupError = document.getElementById('setup-error');
     const backendStatus = document.getElementById('backend-status');
+    const questionBankStatus = document.getElementById('question-bank-status');
     const setupDescription = document.getElementById('setup-description');
     const privacyNote = document.getElementById('privacy-note');
 
@@ -19,6 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const promptInput = document.getElementById('prompt-input');
     const sendBtn = document.getElementById('send-btn');
     const mappingData = document.getElementById('mapping-data').innerText.trim();
+
+    const quizController = createQuizController({
+        chatHistory,
+        bankSummary: document.getElementById('bank-summary'),
+        bankStatus: questionBankStatus,
+        promptInput,
+        renderMath: renderMathContent,
+    });
 
     let backendConfigured = false;
     let backendStatusLoaded = false;
@@ -32,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleBtn.addEventListener('click', async () => {
         chatView.classList.add('active');
         await loadBackendStatus();
+        await quizController.ensureQuestionBank().catch(() => {});
     });
 
     closeBtn.addEventListener('click', () => {
@@ -63,6 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedModelAlias = data.defaultModel || modelSelect.value;
             modelSelect.value = selectedModelAlias;
             renderSetupState();
+            if (data.questionCount && questionBankStatus) {
+                questionBankStatus.innerText = `Structured question bank: ${data.questionCount} questions available to the assistant.`;
+            }
         } catch (error) {
             backendConfigured = false;
             backendStatusLoaded = false;
@@ -70,6 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
             apiKeyWrapper.style.display = 'block';
             setupDescription.innerText = 'Enter your own Gemini API key to continue, or configure `GEMINI_API_KEY` on the deployment for the server-side route.';
             privacyNote.innerText = 'In fallback mode, your browser talks directly to Gemini using your key. The app keeps the key only in memory for this tab.';
+            if (questionBankStatus) {
+                questionBankStatus.innerText = 'Structured question bank: still available locally in the sidebar once it loads.';
+            }
         } finally {
             saveKeyBtn.disabled = false;
             saveKeyBtn.innerText = 'Start AI Assistant';
@@ -107,8 +125,23 @@ document.addEventListener('DOMContentLoaded', () => {
         setupError.style.display = 'none';
         setupView.style.display = 'none';
         messagingView.style.display = 'flex';
+        await quizController.ensureQuestionBank().catch(() => {});
         promptInput.focus();
     });
+
+    function renderMathContent(node) {
+        if (typeof renderMathInElement !== 'undefined') {
+            renderMathInElement(node, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '\\[', right: '\\]', display: true },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\(', right: '\\)', display: false },
+                ],
+                throwOnError: false,
+            });
+        }
+    }
 
     function addMessage(text, sender) {
         const msgDiv = document.createElement('div');
@@ -118,17 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (sender === 'ai' && typeof marked !== 'undefined') {
             contentDiv.innerHTML = marked.parse(text);
-            if (typeof renderMathInElement !== 'undefined') {
-                renderMathInElement(contentDiv, {
-                    delimiters: [
-                        { left: '$$', right: '$$', display: true },
-                        { left: '\\[', right: '\\]', display: true },
-                        { left: '$', right: '$', display: false },
-                        { left: '\\(', right: '\\)', display: false },
-                    ],
-                    throwOnError: false,
-                });
-            }
+            renderMathContent(contentDiv);
         } else {
             contentDiv.innerText = text;
         }
@@ -432,6 +455,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (quizController.maybeHandlePrompt(prompt)) {
+            addMessage(prompt, 'user');
+            promptInput.value = '';
+            promptInput.focus();
+            return;
+        }
+
         addMessage(prompt, 'user');
         promptInput.value = '';
         promptInput.disabled = true;
@@ -440,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const loaderId = addLoader();
 
         try {
-            const reply = await requestAssistant(prompt);
+            const reply = await requestAssistant(quizController.augmentPrompt(prompt));
             removeLoader(loaderId);
             addMessage(reply, 'ai');
             conversationHistory.push({ role: 'user', text: prompt });

@@ -27,14 +27,14 @@
         <p><strong>PDF Direct Link:</strong> <a href="https://mindmatrix-07.github.io/KEAM-PYQ-Me/KEAM_PYQ_All.pdf">KEAM_PYQ_All.pdf</a></p>
         <p><strong>INDEX MAPPING (Pages to Exams):</strong> Below is the mapping of actual PDF page numbers to the specific Year, Date, and Shift of the question papers to help you analyze exactly when a question was asked:</p>
         <pre id="mapping-data">
-- Pages 1 to 24: Keam 2025 24 April Shift 1 Exam Question paper
-- Pages 25 to 48: Keam 2025 24 April Shift 1 Exam Question paper (Part 2)
-- Pages 49 to 68: keam 2025 25 April Question Paper
-- Pages 69 to 88: Keam 2025 27 April tex
-- Pages 89 to 104: keam 2025 April 26 Question paper
-- Pages 105 to 125: Keam 23 April Question Paper 2025
-- Pages 126 to 132: keam 28 April 2025 tex 1
-- Pages 133 to 149: Keam 29 pharmacy exam
+- Pages 1 to 24: 24 April 2025 bundled paper in the PDF
+- Pages 25 to 48: duplicate scan of the same 24 April 2025 bundled paper
+- Pages 49 to 68: 25 April 2025 paper
+- Pages 69 to 88: 27 April 2025 paper
+- Pages 89 to 104: 26 April 2025 paper
+- Pages 105 to 125: 23 April 2025 paper
+- Pages 126 to 132: 28 April 2025 paper
+- Pages 133 to 149: 29 April 2025 BPharm paper
 - Pages 150 to 166: KEAM 2024 Pharmacy Question Paper June 10
 - Pages 167 to 202: KEAM 2024 Question Paper June 5
 - Pages 203 to 240: KEAM 2024 Question Paper June 6
@@ -76,6 +76,7 @@
                 <h3>Welcome to AI Analysis</h3>
                 <p id="setup-description">Choose a model and start the assistant. This deployment will read the bundled KEAM PDF automatically.</p>
                 <p id="backend-status" class="small-text status-note">Checking AI configuration...</p>
+                <p id="question-bank-status" class="small-text status-note">Structured question bank: loading...</p>
 
                 <div id="api-key-wrapper">
                     <input type="password" id="api-key-input" placeholder="AIzaSy... Your Gemini API Key">
@@ -93,13 +94,66 @@
             </div>
 
             <div class="messaging-container" id="messaging-view" style="display: none;">
+                <div class="assistant-toolbar">
+                    <div class="mode-switch" role="tablist" aria-label="Assistant mode">
+                        <button class="mode-btn active" id="chat-mode-btn" data-mode="chat" type="button">Ask AI</button>
+                        <button class="mode-btn" id="quiz-mode-btn" data-mode="quiz" type="button">Quiz Mode</button>
+                    </div>
+                    <div class="bank-pill" id="bank-summary">Loading question bank...</div>
+                </div>
+
+                <div class="quiz-panel" id="quiz-panel" hidden>
+                    <div class="quiz-grid">
+                        <label class="field">
+                            <span>Person</span>
+                            <select id="person-select"></select>
+                        </label>
+                        <button class="secondary-btn" id="add-person-btn" type="button">Add Person</button>
+
+                        <label class="field">
+                            <span>Year</span>
+                            <select id="year-filter"></select>
+                        </label>
+                        <label class="field">
+                            <span>Date</span>
+                            <select id="date-filter"></select>
+                        </label>
+                        <label class="field">
+                            <span>Shift</span>
+                            <select id="shift-filter"></select>
+                        </label>
+                        <label class="field">
+                            <span>Subject</span>
+                            <select id="subject-filter"></select>
+                        </label>
+                        <label class="field">
+                            <span>Chapter</span>
+                            <select id="chapter-filter"></select>
+                        </label>
+                        <label class="field field-wide">
+                            <span>Topic Search</span>
+                            <input id="topic-filter" type="text" placeholder="electrostatics, aromaticity, matrices...">
+                        </label>
+                    </div>
+
+                    <div class="quiz-actions">
+                        <button id="start-quiz-btn" type="button">Start Quiz</button>
+                        <button class="secondary-btn" id="next-quiz-btn" type="button">Next Question</button>
+                        <button class="ghost-btn" id="reset-quiz-btn" type="button">Reset Filters</button>
+                    </div>
+
+                    <div class="quiz-progress" id="quiz-progress">
+                        Pick a person and filters, then start a quiz from the structured question bank.
+                    </div>
+                </div>
+
                 <div class="chat-history" id="chat-history">
                     <div class="message ai-message">
-                        <div class="content">Hello! I have the KEAM master PDF ready. Ask for questions from any year, date, or shift and I will keep quiz mode on by default.</div>
+                        <div class="content">Hello! I have the KEAM master PDF and the structured question bank ready. You can ask normally, or switch to quiz mode to answer questions with option boxes and delayed answer reveal.</div>
                     </div>
                 </div>
                 <div class="input-area">
-                    <textarea id="prompt-input" placeholder="E.g. Extract the first 5 physics questions from the 2024 June 7 paper..." rows="3"></textarea>
+                    <textarea id="prompt-input" placeholder="E.g. collect electrostatics questions from 2024, or ask the AI to explain the current quiz question..." rows="3"></textarea>
                     <button id="send-btn">Send</button>
                 </div>
             </div>
