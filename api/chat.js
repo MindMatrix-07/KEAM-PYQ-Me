@@ -3,7 +3,7 @@ const path = require('path');
 const mappingEntries = require('../index_mapping.json');
 
 const PDF_FILENAME = 'KEAM_PYQ_All.pdf';
-const DEFAULT_MODEL = 'gemini-2.5-pro';
+const DEFAULT_MODEL = 'gemini-2.5-flash';
 const MAX_HISTORY_MESSAGES = 12;
 const ALLOWED_MODELS = new Set([
     'gemini-2.5-pro',
