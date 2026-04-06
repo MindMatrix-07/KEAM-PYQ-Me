@@ -170,6 +170,20 @@ iframe {
     border-color: #2196F3;
 }
 
+.setup-container select {
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #1a1a1a;
+    color: white;
+    font-size: 1rem;
+    outline: none;
+}
+
+.setup-container select:focus {
+    border-color: #2196F3;
+}
+
 .setup-container button {
     padding: 12px;
     border-radius: 6px;
@@ -189,6 +203,10 @@ iframe {
 .small-text {
     font-size: 0.8rem !important;
     opacity: 0.7;
+}
+
+.status-note {
+    margin: -8px 0 0 0;
 }
 
 .error-msg {
