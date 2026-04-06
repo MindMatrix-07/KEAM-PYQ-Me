@@ -3,11 +3,12 @@ const path = require('path');
 const mappingEntries = require('../index_mapping.json');
 
 const PDF_FILENAME = 'KEAM_PYQ_All.pdf';
-const DEFAULT_MODEL = 'gemini-1.5-pro-latest';
+const DEFAULT_MODEL = 'gemini-2.5-pro';
 const MAX_HISTORY_MESSAGES = 12;
 const ALLOWED_MODELS = new Set([
-    'gemini-1.5-pro-latest',
-    'gemini-1.5-flash-latest',
+    'gemini-2.5-pro',
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
 ]);
 
 const SYSTEM_PROMPT = `You are an expert AI assistant for KEAM previous year questions.
