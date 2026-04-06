@@ -170,6 +170,20 @@ iframe {
     border-color: #2196F3;
 }
 
+.setup-container select {
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background-color: #1a1a1a;
+    color: white;
+    font-size: 1rem;
+    outline: none;
+}
+
+.setup-container select:focus {
+    border-color: #2196F3;
+}
+
 .setup-container button {
     padding: 12px;
     border-radius: 6px;
@@ -189,6 +203,10 @@ iframe {
 .small-text {
     font-size: 0.8rem !important;
     opacity: 0.7;
+}
+
+.status-note {
+    margin: -8px 0 0 0;
 }
 
 .error-msg {
@@ -336,4 +354,292 @@ iframe {
 @keyframes bounce {
     0%, 80%, 100% { transform: scale(0); }
     40% { transform: scale(1); }
+}
+
+.assistant-toolbar {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid #333;
+    background: linear-gradient(180deg, rgba(29, 29, 29, 0.98), rgba(36, 36, 36, 0.94));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mode-switch {
+    display: flex;
+    gap: 8px;
+}
+
+.mode-btn,
+.secondary-btn,
+.ghost-btn {
+    border: 1px solid #3d4a59;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.mode-btn {
+    background: #151a21;
+    color: #cdd8e5;
+}
+
+.mode-btn.active {
+    background: linear-gradient(135deg, #1976d2, #2d9bf0);
+    border-color: transparent;
+    color: white;
+}
+
+.secondary-btn {
+    background: #162230;
+    color: #d3e4f5;
+}
+
+.ghost-btn {
+    background: transparent;
+    color: #b3c1cf;
+}
+
+.mode-btn:hover,
+.secondary-btn:hover,
+.ghost-btn:hover,
+.quiz-option:hover {
+    transform: translateY(-1px);
+}
+
+.bank-pill {
+    align-self: flex-start;
+    font-size: 0.78rem;
+    color: #9fc7eb;
+    background: rgba(33, 150, 243, 0.12);
+    border: 1px solid rgba(33, 150, 243, 0.24);
+    border-radius: 999px;
+    padding: 6px 10px;
+}
+
+.quiz-panel {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid #333;
+    background: rgba(17, 23, 32, 0.72);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.quiz-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    align-items: end;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.field-wide {
+    grid-column: 1 / -1;
+}
+
+.field span {
+    font-size: 0.78rem;
+    color: #a3b7ca;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.field select,
+.field input {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #425265;
+    background: #111821;
+    color: #eef5fc;
+    font-size: 0.92rem;
+    outline: none;
+}
+
+.field select:focus,
+.field input:focus {
+    border-color: #2d9bf0;
+}
+
+.quiz-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.quiz-actions button {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+#start-quiz-btn,
+#next-quiz-btn {
+    background: linear-gradient(135deg, #1976d2, #2d9bf0);
+    color: white;
+}
+
+#reset-quiz-btn {
+    background: transparent;
+    color: #b3c1cf;
+    border: 1px solid #425265;
+}
+
+.quiz-progress {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: #c3d2df;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+
+.quiz-card {
+    min-width: min(100%, 320px);
+    width: min(100%, 100%);
+    background: linear-gradient(180deg, rgba(36, 45, 57, 0.98), rgba(28, 34, 43, 0.98));
+    border: 1px solid #445669;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.2);
+}
+
+.quiz-card h3 {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+}
+
+.quiz-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.quiz-chip {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #d8e6f5;
+    font-size: 0.72rem;
+    padding: 4px 8px;
+    border-radius: 999px;
+}
+
+.quiz-question {
+    font-size: 1rem;
+    margin-bottom: 12px;
+}
+
+.quiz-options {
+    display: grid;
+    gap: 10px;
+}
+
+.quiz-option {
+    width: 100%;
+    text-align: left;
+    border: 1px solid #53667b;
+    background: #121920;
+    color: #edf5fd;
+    border-radius: 14px;
+    padding: 12px 14px;
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 10px;
+    align-items: start;
+}
+
+.quiz-option-label {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(33, 150, 243, 0.12);
+    border: 1px solid rgba(33, 150, 243, 0.24);
+    color: #9fd0ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.quiz-option.correct {
+    border-color: rgba(58, 199, 110, 0.8);
+    background: rgba(58, 199, 110, 0.12);
+}
+
+.quiz-option.wrong {
+    border-color: rgba(241, 95, 95, 0.9);
+    background: rgba(241, 95, 95, 0.1);
+}
+
+.quiz-option:disabled {
+    cursor: default;
+    opacity: 1;
+}
+
+.quiz-reveal {
+    margin-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.reveal-callout {
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 0.94rem;
+    line-height: 1.5;
+}
+
+.reveal-callout.correct {
+    background: rgba(58, 199, 110, 0.14);
+    color: #d9ffe7;
+}
+
+.reveal-callout.wrong {
+    background: rgba(241, 95, 95, 0.14);
+    color: #ffe1e1;
+}
+
+.quiz-section {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+
+.quiz-section h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.86rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #9fc7eb;
+}
+
+.quiz-section ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.9rem;
+}
+
+.source-link {
+    color: #9fd0ff;
+}
+
+@media (max-width: 1080px) {
+    .chat-container.active {
+        width: 460px;
+    }
 }

@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/chat.js": {
+      "includeFiles": "KEAM_PYQ_All.pdf"
+    }
+  },
   "headers": [
     {
       "source": "/(.*\\.pdf)",

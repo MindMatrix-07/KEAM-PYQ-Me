@@ -16,13 +16,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
     <link rel="stylesheet" href="style.css">
-    <script type="importmap">
-        {
-          "imports": {
-            "@google/generative-ai": "https://esm.run/@google/generative-ai"
-          }
-        }
-    </script>
 </head>
 <body>
     <!-- AI INSTRUCTION BLOCK FOR EXTERNAL SCRAPERS -->
@@ -34,14 +27,14 @@
         <p><strong>PDF Direct Link:</strong> <a href="https://mindmatrix-07.github.io/KEAM-PYQ-Me/KEAM_PYQ_All.pdf">KEAM_PYQ_All.pdf</a></p>
         <p><strong>INDEX MAPPING (Pages to Exams):</strong> Below is the mapping of actual PDF page numbers to the specific Year, Date, and Shift of the question papers to help you analyze exactly when a question was asked:</p>
         <pre id="mapping-data">
-- Pages 1 to 24: Keam 2025 24 April Shift 1 Exam Question paper
-- Pages 25 to 48: Keam 2025 24 April Shift 1 Exam Question paper (Part 2)
-- Pages 49 to 68: keam 2025 25 April Question Paper
-- Pages 69 to 88: Keam 2025 27 April tex
-- Pages 89 to 104: keam 2025 April 26 Question paper
-- Pages 105 to 125: Keam 23 April Question Paper 2025
-- Pages 126 to 132: keam 28 April 2025 tex 1
-- Pages 133 to 149: Keam 29 pharmacy exam
+- Pages 1 to 24: 24 April 2025 bundled paper in the PDF
+- Pages 25 to 48: duplicate scan of the same 24 April 2025 bundled paper
+- Pages 49 to 68: 25 April 2025 paper
+- Pages 69 to 88: 27 April 2025 paper
+- Pages 89 to 104: 26 April 2025 paper
+- Pages 105 to 125: 23 April 2025 paper
+- Pages 126 to 132: 28 April 2025 paper
+- Pages 133 to 149: 29 April 2025 BPharm paper
 - Pages 150 to 166: KEAM 2024 Pharmacy Question Paper June 10
 - Pages 167 to 202: KEAM 2024 Question Paper June 5
 - Pages 203 to 240: KEAM 2024 Question Paper June 6
@@ -61,7 +54,7 @@
             <div class="header">
                 <div>
                     <h1>KEAM Previous Year Questions</h1>
-                    <p style="margin: 5px 0 0 0; font-size: 0.9rem; opacity: 0.8;">Integrated AI Analysis explicitly built with Gemini 1.5 Pro</p>
+                    <p style="margin: 5px 0 0 0; font-size: 0.9rem; opacity: 0.8;">Integrated AI analysis with the bundled KEAM master PDF</p>
                 </div>
                 <div class="header-actions">
                     <button class="action-btn toggle-ai-btn" id="toggle-ai">Use AI Assistant</button>
@@ -75,40 +68,92 @@
 
         <div class="chat-container" id="chat-view">
             <div class="chat-header">
-                <h2>Gemini 1.5 Pro AI</h2>
+                <h2>KEAM AI Assistant</h2>
                 <button class="close-btn" id="close-ai">&times;</button>
             </div>
             
             <div class="setup-container" id="setup-view">
                 <h3>Welcome to AI Analysis</h3>
-                <p>Enter your Gemini API key and select the local PDF file from your computer to start the AI.</p>
-                
-                <input type="password" id="api-key-input" placeholder="AIzaSy... Your Gemini API Key">
+                <p id="setup-description">Choose a model and start the assistant. This deployment will read the bundled KEAM PDF automatically.</p>
+                <p id="backend-status" class="small-text status-note">Checking AI configuration...</p>
+                <p id="question-bank-status" class="small-text status-note">Structured question bank: loading...</p>
 
-                <select id="model-select" style="padding: 12px; border-radius: 6px; border: 1px solid #444; background-color: #1a1a1a; color: white;">
-                    <option value="gemini-2.0-flash">Gemini 2.0 Flash (Fastest - Free Tier)</option>
-                    <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite (Lightest)</option>
-                    <option value="gemini-2.5-pro-preview-03-25">Gemini 2.5 Pro Preview (Most Powerful)</option>
-                    <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash Latest</option>
-                    <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro Latest</option>
+                <div id="api-key-wrapper">
+                    <input type="password" id="api-key-input" placeholder="AIzaSy... Your Gemini API Key">
+                </div>
+
+                <select id="model-select">
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Free large-context default)</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro (Best reasoning for full PDF)</option>
+                    <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite (Cheapest)</option>
                 </select>
 
-                <label style="color: #aaa; font-size: 0.9rem; margin-top: 5px;">Select the KEAM_PYQ_All.pdf from your computer:</label>
-                <input type="file" id="pdf-file-input" accept="application/pdf" style="padding: 10px; border-radius: 6px; border: 1px solid #444; background-color: #1a1a1a; color: white; cursor: pointer;">
-
-                <button id="save-key-btn">Start AI Analysis</button>
-                <p class="small-text">Your API key is stored locally in your browser. The PDF is sent directly to Google's secure AI API — never to any third-party server.</p>
+                <button id="save-key-btn">Start AI Assistant</button>
+                <p class="small-text" id="privacy-note">The PDF stays inside the deployment. If a server-side Gemini key is configured, visitors do not need to paste their own key.</p>
                 <div id="setup-error" class="error-msg"></div>
             </div>
 
             <div class="messaging-container" id="messaging-view" style="display: none;">
+                <div class="assistant-toolbar">
+                    <div class="mode-switch" role="tablist" aria-label="Assistant mode">
+                        <button class="mode-btn active" id="chat-mode-btn" data-mode="chat" type="button">Ask AI</button>
+                        <button class="mode-btn" id="quiz-mode-btn" data-mode="quiz" type="button">Quiz Mode</button>
+                    </div>
+                    <div class="bank-pill" id="bank-summary">Loading question bank...</div>
+                </div>
+
+                <div class="quiz-panel" id="quiz-panel" hidden>
+                    <div class="quiz-grid">
+                        <label class="field">
+                            <span>Person</span>
+                            <select id="person-select"></select>
+                        </label>
+                        <button class="secondary-btn" id="add-person-btn" type="button">Add Person</button>
+
+                        <label class="field">
+                            <span>Year</span>
+                            <select id="year-filter"></select>
+                        </label>
+                        <label class="field">
+                            <span>Date</span>
+                            <select id="date-filter"></select>
+                        </label>
+                        <label class="field">
+                            <span>Shift</span>
+                            <select id="shift-filter"></select>
+                        </label>
+                        <label class="field">
+                            <span>Subject</span>
+                            <select id="subject-filter"></select>
+                        </label>
+                        <label class="field">
+                            <span>Chapter</span>
+                            <select id="chapter-filter"></select>
+                        </label>
+                        <label class="field field-wide">
+                            <span>Topic Search</span>
+                            <input id="topic-filter" type="text" placeholder="electrostatics, aromaticity, matrices...">
+                        </label>
+                    </div>
+
+                    <div class="quiz-actions">
+                        <button id="start-quiz-btn" type="button">Start Quiz</button>
+                        <button class="secondary-btn" id="next-quiz-btn" type="button">Next Question</button>
+                        <button class="ghost-btn" id="reset-quiz-btn" type="button">Reset Filters</button>
+                    </div>
+
+                    <div class="quiz-progress" id="quiz-progress">
+                        Pick a person and filters, then start a quiz from the structured question bank.
+                    </div>
+                </div>
+
                 <div class="chat-history" id="chat-history">
                     <div class="message ai-message">
-                        <div class="content">Hello! I have your KEAM PYQ loaded. I am in Quiz Mode — ask me for questions from any year/date/shift and I'll quiz you! 📚</div>
+                        <div class="content">Hello! I have the KEAM master PDF and the structured question bank ready. You can ask normally, or switch to quiz mode to answer questions with option boxes and delayed answer reveal.</div>
                     </div>
                 </div>
                 <div class="input-area">
-                    <textarea id="prompt-input" placeholder="E.g. Extract the first 5 physics questions from the 2024 June 7 paper..." rows="3"></textarea>
+                    <textarea id="prompt-input" placeholder="E.g. collect electrostatics questions from 2024, or ask the AI to explain the current quiz question..." rows="3"></textarea>
                     <button id="send-btn">Send</button>
                 </div>
             </div>
